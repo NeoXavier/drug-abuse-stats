@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Male to female ratio</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/style.css">
+    </head>
+    <body>
+
+        <a href="/">Back to Home</a>
+        <h1>What is the male-to-female ratio of drug abusers each year?</h1>
+
+        <h2>Visualization</h2>
+        <div>
+            <canvas id="chart"></canvas>
+        </div>
+        <div>
+            <canvas id="chart2"></canvas>
+        </div>
+
+        <h2>Database Query Results</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <% Object.keys(results[0]).forEach(column => { %>
+                        <th><%= column %></th>
+                    <% }); %>
+                </tr>
+            </thead>
+            <tbody>
+                <% results.forEach(row => { %>
+                    <tr>
+                        <% Object.values(row).forEach(value => { %>
+                            <td><%= value %></td>
+                        <% }); %>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Process data for the chart
+        const rawData = <%- JSON.stringify(results) %>;
+
+        // Extract unique years and genders
+        const years = [...new Set(rawData.map(row => row.year))];
+        const genders = [...new Set(rawData.map(row => row.sex))];
+
+        // Prepare datasets for each gender
+        const datasets = genders.map(gender => {
+            return {
+                label: gender,
+                data: years.map(year => {
+                    const entry = rawData.find(row => row.year === year && row.sex === gender);
+                    return entry ? entry.no_of_drug_abusers : 0;
+                }),
+                borderColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 1)`,
+                fill: false,
+                tension: 0.1
+            };
+        });
+
+        // Render the chart
+        const ctx = document.getElementById('chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Drug Abuse Numbers by Gender and Year'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Number of Drug Abusers'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+    <script>
+        // Prepare datasets for each gender
+        const datasets2 = genders.map(gender => {
+            return {
+                label: gender,
+                data: years.map(year => {
+                    // Get the total for this year
+                    const total = rawData
+                        .filter(row => row.year === year)
+                        .reduce((sum, row) => sum + row.no_of_drug_abusers, 0);
+
+                    // Get the value for this gender in this year
+                    const entry = rawData.find(row => row.year === year && row.sex === gender);
+                    return entry ? (entry.no_of_drug_abusers / total) * 100 : 0; // Ratio as a percentage
+                }),
+                backgroundColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.6)`,
+                borderColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 1)`,
+                borderWidth: 1
+            };
+        });
+
+        // Render the chart
+        const ctx2 = document.getElementById('chart2').getContext('2d');
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: years,
+                datasets: datasets2
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Gender Ratios by Year (100% Stacked)'
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Percentage'
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                return value + '%'; // Add percentage symbol
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    </body>
+</html>
+

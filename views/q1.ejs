@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Age Group Breakdown over the last 5 years</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/style.css">
+    </head>
+    <body>
+
+        <a href="/">Back to Home</a>
+
+        <h1>Over the last 5 years, which age group has seen the steepest increase in drug abuse cases?</h1>
+
+        <h2>Visualization</h2>
+        <div>
+            <canvas id="myChart"></canvas>
+        </div>
+
+        <h2>Database Query Results</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <% Object.keys(results[0]).forEach(column => { %>
+                        <th><%= column %></th>
+                    <% }); %>
+                </tr>
+            </thead>
+            <tbody>
+                <% results.forEach(row => { %>
+                    <tr>
+                        <% Object.values(row).forEach(value => { %>
+                            <td><%= value %></td>
+                        <% }); %>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script async>
+        // Process data for the chart
+        const rawData = <%- JSON.stringify(results) %>;
+
+        // Extract unique years and age groups
+        const years = [...new Set(rawData.map(row => row.year))];
+        const ageGroups = [...new Set(rawData.map(row => row.age_group))];
+
+        // Prepare datasets for each age group
+        const datasets = ageGroups.map(ageGroup => {
+            return {
+                label: ageGroup,
+                data: years.map(year => {
+                    const entry = rawData.find(row => row.year === year && row.age_group === ageGroup);
+                    return entry ? entry.no_of_drug_abusers : 0;
+                }),
+                backgroundColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.2)`,
+                borderColor: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 1)`,
+                borderWidth: 1
+            };
+        });
+
+        // Render the chart
+        const ctx = document.getElementById('myChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: years,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Drug Abuse by Age Group and Year'
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: false
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        </script>
+    </body>
+</html>

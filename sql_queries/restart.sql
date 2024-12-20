@@ -1,0 +1,5 @@
+DROP DATABASE IF EXISTS DrugAbuseDB;
+
+CREATE DATABASE DrugAbuseDB;
+
+USE DrugAbuseDB;
